@@ -1,0 +1,30 @@
+CREATE TABLE DateTimeDimension (
+    DateTimeKey BIGINT NOT NULL, -- Unique key in YYYYMMDDHH format (no minutes)
+    DateTime DATETIME2(3) NOT NULL, -- The actual date and time
+    Year INT NOT NULL, -- Year (YYYY)
+    Month INT NOT NULL, -- Month (MM)
+    Day INT NOT NULL, -- Day (DD)
+    Hour INT NOT NULL, -- Hour (HH)
+    DayOfWeek INT NOT NULL -- Monday = 1, Tuesday = 2, ..., Sunday = 7
+);
+
+-- Populate the table for January 2025 (hourly)
+DECLARE @StartDate DATETIME2(3) = '2025-01-01 00:00:00';
+DECLARE @EndDate DATETIME2(3) = '2025-01-31 23:00:00'; -- Last hour of January
+DECLARE @CurrentDate DATETIME2(3) = @StartDate;
+
+WHILE @CurrentDate <= @EndDate
+BEGIN
+    INSERT INTO DateTimeDimension (DateTimeKey, DateTime, Year, Month, Day, Hour, DayOfWeek)
+    VALUES (
+        CAST(YEAR(@CurrentDate) * 1000000 + MONTH(@CurrentDate) * 10000 + DAY(@CurrentDate) * 100 + DATEPART(HOUR, @CurrentDate) AS BIGINT), -- YYYYMMDDHH
+        @CurrentDate,
+        YEAR(@CurrentDate),
+        MONTH(@CurrentDate),
+        DAY(@CurrentDate),
+        DATEPART(HOUR, @CurrentDate),
+        ((DATEPART(WEEKDAY, @CurrentDate) + 5) % 7) + 1 -- Adjust so Monday = 1
+    );
+
+    SET @CurrentDate = DATEADD(HOUR, 1, @CurrentDate); -- Move to the next hour
+END;
