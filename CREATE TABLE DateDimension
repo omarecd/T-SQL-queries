@@ -1,0 +1,28 @@
+CREATE TABLE DateDimension (
+    DateKey INT NOT NULL,       -- Unique key in YYYYMMDD format
+    Date DATE NOT NULL,         -- The actual date
+    Year INT NOT NULL,          -- Year (YYYY)
+    Month INT NOT NULL,         -- Month (MM)
+    Day INT NOT NULL,           -- Day (DD)
+    DayOfWeek INT NOT NULL      -- Monday = 1, Tuesday = 2, ..., Sunday = 7
+);
+
+-- Populate the table for January 2025
+DECLARE @StartDate DATE = '2025-01-01';
+DECLARE @EndDate DATE = '2025-01-31';
+DECLARE @CurrentDate DATE = @StartDate;
+
+WHILE @CurrentDate <= @EndDate
+BEGIN
+    INSERT INTO DateDimension (DateKey, Date, Year, Month, Day, DayOfWeek)
+    VALUES (
+        YEAR(@CurrentDate) * 10000 + MONTH(@CurrentDate) * 100 + DAY(@CurrentDate),  -- YYYYMMDD
+        @CurrentDate,
+        YEAR(@CurrentDate),
+        MONTH(@CurrentDate),
+        DAY(@CurrentDate),
+        ((DATEPART(WEEKDAY, @CurrentDate) + 5) % 7) + 1  -- Adjust to start with Monday = 1
+    );
+
+    SET @CurrentDate = DATEADD(DAY, 1, @CurrentDate); -- Move to the next day
+END;
